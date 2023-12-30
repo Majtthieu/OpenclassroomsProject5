@@ -5,12 +5,12 @@ const booksCtrl = require('../controllers/book');
 
 const auth = require('../middleware/auth');
 
-const multer = require('../middleware/multer-config')
+const { upload, sharpMiddleware } = require('../middleware/multer-config');
 
 router.get('/', auth, booksCtrl.getAllBooks);
-router.post('/', auth, multer, booksCtrl.createBook);
+router.post('/', auth, upload.single('image'), sharpMiddleware, booksCtrl.createBook);
 router.get('/:id', auth, booksCtrl.getOneBook);
-router.put('/:id', auth, multer, booksCtrl.modifyBook);
+router.put('/:id', auth, upload.single('image'), sharpMiddleware, booksCtrl.modifyBook);
 router.delete('/:id', auth, booksCtrl.deleteBook);
 
 module.exports = router;
