@@ -9,6 +9,7 @@ const { upload, sharpMiddleware } = require('../middleware/multer-config');
 
 router.get('/', booksCtrl.getAllBooks);
 router.post('/', auth, upload.single('image'), sharpMiddleware, booksCtrl.createBook);
+router.get('/bestrating', booksCtrl.bestBooks);
 router.get('/:id', booksCtrl.getOneBook);
 router.put('/:id', auth, upload.single('image'), sharpMiddleware, booksCtrl.modifyBook);
 router.delete('/:id', auth, booksCtrl.deleteBook);
