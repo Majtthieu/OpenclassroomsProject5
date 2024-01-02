@@ -12,5 +12,6 @@ router.post('/', auth, upload.single('image'), sharpMiddleware, booksCtrl.create
 router.get('/:id', booksCtrl.getOneBook);
 router.put('/:id', auth, upload.single('image'), sharpMiddleware, booksCtrl.modifyBook);
 router.delete('/:id', auth, booksCtrl.deleteBook);
+router.post("/:id/rating", auth, booksCtrl.rateBook);
 
 module.exports = router;

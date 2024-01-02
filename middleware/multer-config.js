@@ -30,7 +30,7 @@ const sharpMiddleware = (req, res, next) => {
         .webp({ quality: 50 })
         .resize({
             width: 400,
-            height: 400,
+            height: 600,
             fit: 'inside'
         })
         .toFile(path.join('images', webpFilename), (err) => {
@@ -42,7 +42,7 @@ const sharpMiddleware = (req, res, next) => {
             // suppression du fichier d'origine
             fs.unlinkSync(req.file.path);
 
-            // modification du chemin pour la nouvelle image
+            // modification du chemin vers la nouvelle image
             req.file.filename = webpFilename;
 
             next();
