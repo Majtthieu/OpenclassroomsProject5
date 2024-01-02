@@ -1,5 +1,6 @@
 const User = require('../models/user');
 const bcrypt = require("bcrypt");
+const env = require('../env.json');
 
 exports.signup = (req, res, next) => {
     bcrypt.hash(req.body.password, 10)
@@ -16,6 +17,7 @@ exports.signup = (req, res, next) => {
 };
 
 const jwt = require('jsonwebtoken');
+const tokenSecret = env.TOKEN_SECRET;
 
 exports.login = (req, res, next) => {
     User.findOne({ email: req.body.email })
@@ -32,8 +34,8 @@ exports.login = (req, res, next) => {
                         userId: user._id,
                         token: jwt.sign(
                             { userId: user._id },
-                            'RANDOM_TOKEN_SECRET',
-                            { expiresIn: '24h' }
+                            tokenSecret,
+                            { expiresIn: '4h' }
                         )
                     });
                 })

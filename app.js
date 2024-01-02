@@ -1,14 +1,17 @@
 const express = require('express');
 
 const mongoose = require('mongoose');
+const env = require('./env.json');
 
 const app = express();
 
 const userRoutes = require('./routes/user');
 const booksRoutes = require('./routes/book');
 const path = require('path');
+const username = env.DB_USERNAME;
+const password = env.DB_PASSWORD;
 
-mongoose.connect('mongodb+srv://@atlascluster.flydsjo.mongodb.net/?retryWrites=true&w=majority',
+mongoose.connect(`mongodb+srv://${username}:${password}@atlascluster.flydsjo.mongodb.net/?retryWrites=true&w=majority`,
     {
         useNewUrlParser: true,
         useUnifiedTopology: true

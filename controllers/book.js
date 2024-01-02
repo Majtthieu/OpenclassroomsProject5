@@ -9,7 +9,7 @@ exports.createBook = (req, res, next) => {
     if (!req.file) {
         return res
             .status(400)
-            .json({ error: "Il faut une image du livre" });
+            .json({ error });
     } else {
         const book = new Book({
             ...bookObject,
@@ -19,7 +19,9 @@ exports.createBook = (req, res, next) => {
 
         book.save()
             .then(() => { res.status(201).json({ message: 'Livre enregistré !' }) })
-            .catch(error => { res.status(400).json({ error }) })
+            .catch(error => {
+                res.status(400).json({ error });
+            })
     }
 };
 
@@ -32,9 +34,7 @@ exports.getOneBook = (req, res, next) => {
         }
     ).catch(
         (error) => {
-            res.status(404).json({
-                error: error
-            });
+            res.status(404).json({ error });
         }
     );
 };
@@ -49,7 +49,7 @@ exports.modifyBook = (req, res, next) => {
     Book.findOne({ _id: req.params.id })
         .then((book) => {
             if (book.userId != req.auth.userId) {
-                res.status(401).json({ message: 'Not authorized' });
+                res.status(403).json({ message: 'unauthorized request' });
             } else {
                 const filename = book.imageUrl.split('/images/')[1];
                 fs.unlink(`images/${filename}`, () => {
@@ -68,7 +68,7 @@ exports.deleteBook = (req, res, next) => {
     Book.findOne({ _id: req.params.id })
         .then(book => {
             if (book.userId != req.auth.userId) {
-                res.status(401).json({ message: 'Not authorized' });
+                res.status(403).json({ message: 'unauthorized request' });
             } else {
                 const filename = book.imageUrl.split('/images/')[1];
                 fs.unlink(`images/${filename}`, () => {
@@ -98,19 +98,19 @@ exports.getAllBooks = (req, res, next) => {
 };
 
 exports.rateBook = async (req, res, next) => {
-    const bookId = req.params.id; // Récupérer l'ID du livre à partir des paramètres de la requête
-    const userId = req.auth.userId; // Récupérer l'ID de l'utilisateur à partir du token
-    const { rating } = req.body; // Récupérer la note à partir du corps de la requête
+    const bookId = req.params.id; // récupération de l'id du livre à partir des paramètres de la requête
+    const userId = req.auth.userId; // récupération de l'id de l'utilisateur à partir du token
+    const { rating } = req.body; // récupération de la note à partir du corps de la requête
 
     try {
-        // Vérifier si l'utilisateur a déjà noté ce livre
+        // vérifier si l'utilisateur a déjà noté ce livre
         const existingRating = await Book.findOne({ _id: bookId, 'ratings.userId': userId });
 
         if (existingRating) {
             return res.status(400).json({ error: 'L\'utilisateur a déjà noté ce livre.' });
         }
 
-        // Si l'utilisateur n'a pas encore noté le livre, ajouter la note
+        // si l'utilisateur n'a pas encore noté le livre, ajouter la note
         const book = await Book.findByIdAndUpdate(
             bookId,
             {
@@ -119,7 +119,7 @@ exports.rateBook = async (req, res, next) => {
             { new: true }
         );
 
-        // Mise à jour de la moyenne des notes
+        // mise à jour de la moyenne des notes
         const totalRatings = book.ratings.length;
         const totalGrades = book.ratings.reduce((sum, rating) => sum + rating.grade, 0);
         const averageRating = Math.round((totalGrades / totalRatings) * 10) / 10;
@@ -135,6 +135,7 @@ exports.rateBook = async (req, res, next) => {
 };
 
 exports.bestBooks = async (req, res, next) => {
+    // rangement dans l'order decroissant de la moyenne des notes
     await Book.find().sort({ averageRating: -1 }).limit(3)
         .then(books => res.status(200).json(books))
         .catch(error => res.status(401).json({ error }));
