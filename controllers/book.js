@@ -91,22 +91,33 @@ exports.rateBook = async (req, res, next) => {
     const bookId = req.params.id; // Récupérer l'ID du livre à partir des paramètres de la requête
     const userId = req.auth.userId; // Récupérer l'ID de l'utilisateur à partir du token
     const { rating } = req.body; // Récupérer la note à partir du corps de la requête
-    const book = await Book.findById(bookId);
 
     try {
         // Vérifier si l'utilisateur a déjà noté ce livre
-        const existingRating = await Book.findOne({ id: bookId, 'ratings.userId': userId });
+        const existingRating = await Book.findOne({ _id: bookId, 'ratings.userId': userId });
 
         if (existingRating) {
             return res.status(400).json({ error: 'L\'utilisateur a déjà noté ce livre.' });
         }
 
         // Si l'utilisateur n'a pas encore noté le livre, ajouter la note
-        book.ratings.push({ userId, grade: rating });
+        const book = await Book.findByIdAndUpdate(
+            bookId,
+            {
+                $push: { ratings: { userId, grade: rating } },
+            },
+            { new: true }
+        );
+
+        // Mise à jour de la moyenne des notes
+        const totalRatings = book.ratings.length;
+        const totalGrades = book.ratings.reduce((sum, rating) => sum + rating.grade, 0);
+        const averageRating = Math.round((totalGrades / totalRatings) * 10) / 10;
+        book.averageRating = averageRating;
 
         await book.save();
 
-        res.status(200).json({ message: 'Note ajoutée avec succès.', book });
+        res.status(200).json(book);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Une erreur est survenue lors de l\'ajout de la note.' });
