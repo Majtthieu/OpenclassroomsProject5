@@ -51,12 +51,19 @@ exports.modifyBook = (req, res, next) => {
             if (book.userId != req.auth.userId) {
                 res.status(403).json({ message: 'unauthorized request' });
             } else {
-                const filename = book.imageUrl.split('/images/')[1];
-                fs.unlink(`images/${filename}`, () => {
+                // remplacement de l'image si présence d'une nouvelle
+                if (req.file) {
+                    const filename = book.imageUrl.split('/images/')[1];
+                    fs.unlink(`images/${filename}`, () => {
+                        Book.updateOne({ _id: req.params.id }, { ...bookObject, _id: req.params.id })
+                            .then(() => res.status(200).json({ message: 'livre modifié!' }))
+                            .catch(error => res.status(401).json({ error }));
+                    });
+                } else {
                     Book.updateOne({ _id: req.params.id }, { ...bookObject, _id: req.params.id })
                         .then(() => res.status(200).json({ message: 'livre modifié!' }))
                         .catch(error => res.status(401).json({ error }));
-                });
+                }
             }
         })
         .catch((error) => {
@@ -135,7 +142,7 @@ exports.rateBook = async (req, res, next) => {
 };
 
 exports.bestBooks = async (req, res, next) => {
-    // rangement dans l'order decroissant de la moyenne des notes
+    // rangement dans l'ordre décroissant de la moyenne des notes
     await Book.find().sort({ averageRating: -1 }).limit(3)
         .then(books => res.status(200).json(books))
         .catch(error => res.status(401).json({ error }));
